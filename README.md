@@ -1,6 +1,6 @@
 # Gmail Generator Tool
 
-![Gmail Generator Tool]
+Gmail Generator Tool
 
 Sebuah tool untuk menghasilkan variasi alamat Gmail yang valid menggunakan teknik dot (.) dan plus (+). Semua variasi akan tetap mengirim email ke alamat Gmail utama Anda.
 
@@ -8,13 +8,28 @@ Sebuah tool untuk menghasilkan variasi alamat Gmail yang valid menggunakan tekni
 
 ## 🌟 Fitur
 
+### Single Email Generator
 - 📧 Generate variasi email dengan teknik dot (.)
 - ➕ Generate variasi email dengan teknik plus (+)
 - 🔄 Generate variasi campuran (dot + plus)
 - 📋 Copy hasil ke clipboard
 - 💾 Download hasil dalam format .txt
+
+### Bulk Email Generator 
+- 📤 Upload file .txt dan .csv untuk batch processing
+- 🔢 Generate variasi untuk banyak email sekaligus
+- 📋 Copy semua hasil ke clipboard
+- 💾 Download semua hasil dalam format .txt
+
+### Fitur Tambahan
 - 🌓 Dark/Light mode
 - 📱 Responsive design
+- 📊 Tampilan grid dan list
+- 🔢 Pagination untuk hasil yang banyak
+- ⚡️ Performa yang optimal
+- 🎯 Validasi input email
+- 🔍 Preview nomor urut pada setiap variasi
+- 💫 Animasi dan transisi yang smooth
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -34,10 +49,22 @@ Sebuah tool untuk menghasilkan variasi alamat Gmail yang valid menggunakan tekni
 
 ## 📝 Cara Penggunaan
 
+### Single Email
 1. Masukkan username Gmail Anda (tanpa @gmail.com)
 2. Klik tombol "Generate"
 3. Pilih jenis variasi yang diinginkan (Dot/Plus/Mix)
 4. Copy atau download hasil yang diinginkan
+
+### Bulk Email
+1. Siapkan file .txt/.csv yang berisi daftar email
+2. Upload file melalui tombol "Upload"
+3. Pilih jenis variasi yang diinginkan
+4. Tunggu proses generate selesai
+5. Download atau copy semua hasil
+
+### Pengaturan Tampilan
+- Pilih tampilan grid atau list sesuai preferensi
+- Atur jumlah item per halaman jika diperlukan
 
 ## ✨ Jenis Variasi
 

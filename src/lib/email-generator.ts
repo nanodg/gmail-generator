@@ -40,62 +40,23 @@ export function generateDotVariations(email: string): string[] {
     return Array.from(variations).sort()
 }
 
-export function generatePlusVariations(email: string): string[] {
+export function generatePlusVariations(email: string, suffix: string): string[] {
     const [localPart, domain] = email.split('@')
     if (!localPart || !domain) return []
 
-    const variations: string[] = []
-    const commonSuffixes = [
-        // Angka
-        '1', '2', '3', '123', '2024',
-        // Umum
-        'mail', 'email', 'spam', 'noreply',
-        // Kategori
-        'shop', 'store', 'shopping',
-        'social', 'media', 'facebook', 'instagram',
-        'work', 'job', 'business',
-        'personal', 'private',
-        // Layanan
-        'newsletter', 'promo', 'info',
-        'support', 'help', 'contact',
-        // Lainnya
-        'temp', 'test', 'dev',
-        'backup', 'archive',
-        'main', 'alt', 'alias'
-    ]
-
-    commonSuffixes.forEach(suffix => {
-        variations.push(`${localPart}+${suffix}@${domain}`)
-    })
-
-    return variations.sort()
+    return [`${localPart}+${suffix}@${domain}`]
 }
 
-export function generateMixVariations(email: string): string[] {
+export function generateMixVariations(email: string, suffix: string): string[] {
     const dotVariations = generateDotVariations(email)
     const variations: Set<string> = new Set()
-
-    const commonSuffixes = [
-        '1', '2', 'mail', 'shop',
-        'social', 'work', 'personal',
-        'backup', 'spam', 'noreply'
-    ]
 
     dotVariations.forEach(dotEmail => {
         const [localPart, domain] = dotEmail.split('@')
         if (localPart && domain) {
-            commonSuffixes.forEach(suffix => {
-                variations.add(`${localPart}+${suffix}@${domain}`)
-            })
-
-            for (let i = 1; i <= 5; i++) {
-                variations.add(`${localPart}+${i}@${domain}`)
-            }
-
-            const currentYear = new Date().getFullYear()
-            variations.add(`${localPart}+${currentYear}@${domain}`)
+            variations.add(`${localPart}+${suffix}@${domain}`)
         }
     })
 
     return Array.from(variations).sort()
-} 
+}

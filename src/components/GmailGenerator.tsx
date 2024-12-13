@@ -1,13 +1,12 @@
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { EmailVariation } from '@/types/email'
-import { EmailInput } from './EmailInput'
-import { VariationsResult } from './VariationsResult'
 import { generateDotVariations, generateMixVariations, generatePlusVariations } from '@/lib/email-generator'
-import { ModeToggle } from './mode-toggle'
-import { InfoDialog } from './InfoDialog'
+import { GmailHeader } from './GmailHeader'
+import { TabsContainer } from './TabsContainer'
+import { ResetDialog } from './ResetDialog'
+import { VariationsManager } from './VariationsManager'
 
 export function GmailGenerator() {
     const [localPart, setLocalPart] = useState('')
@@ -17,6 +16,16 @@ export function GmailGenerator() {
         mixVariations: []
     })
     const { toast } = useToast()
+    const [customSuffixes, setCustomSuffixes] = useState<string[]>([])
+    const [bulkEmails, setBulkEmails] = useState<string[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [showResetDialog, setShowResetDialog] = useState(false)
+    const [pendingTabValue, setPendingTabValue] = useState<string | null>(null)
+    const [activeTab, setActiveTab] = useState("single")
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+    const [sortBy, setSortBy] = useState<'alpha' | 'length'>('alpha') // Tambahkan state sortBy
+
+    const maxVariations = 100 // Menambahkan konstanta maxVariations
 
     // Helper functions
     const getFullEmail = (local: string) => {
@@ -25,11 +34,57 @@ export function GmailGenerator() {
 
     const isValidInput = (input: string) => {
         const local = input.replace('@gmail.com', '')
-        return local.length > 0 && /^[a-zA-Z0-9]+$/.test(local)
+        if (local.length < 3) return false // Minimal 3 karakter
+        if (!/^[a-zA-Z0-9]+$/.test(local)) return false // Hanya huruf dan angka
+        return true
     }
 
     // Handlers
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (bulkEmails.length > 0) {
+            setIsLoading(true)
+            try {
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                const allResults = bulkEmails.reduce((acc, email) => {
+                    const fullEmail = getFullEmail(email)
+                    let plusVariationsAll: string[] = []
+                    let mixVariationsAll: string[] = []
+
+                    customSuffixes.forEach(suffix => {
+                        plusVariationsAll = [...plusVariationsAll, ...generatePlusVariations(fullEmail, suffix)]
+                        mixVariationsAll = [...mixVariationsAll, ...generateMixVariations(fullEmail, suffix)]
+                    })
+
+                    const variations = {
+                        dotVariations: generateDotVariations(fullEmail).slice(0, maxVariations),
+                        plusVariations: plusVariationsAll.slice(0, maxVariations),
+                        mixVariations: mixVariationsAll.slice(0, maxVariations)
+                    }
+                    return {
+                        dotVariations: [...acc.dotVariations, ...variations.dotVariations],
+                        plusVariations: [...acc.plusVariations, ...variations.plusVariations],
+                        mixVariations: [...acc.mixVariations, ...variations.mixVariations]
+                    }
+                }, { dotVariations: [], plusVariations: [], mixVariations: [] } as EmailVariation)
+
+                setResult(allResults)
+                toast({
+                    variant: "success",
+                    title: "Berhasil",
+                    description: "Email variations berhasil di-generate!",
+                })
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Gagal generate email variations",
+                })
+            } finally {
+                setIsLoading(false)
+            }
+            return
+        }
+
         if (!localPart) {
             toast({
                 variant: "destructive",
@@ -39,28 +94,52 @@ export function GmailGenerator() {
             return
         }
 
+        const local = localPart.replace('@gmail.com', '')
         if (!isValidInput(localPart)) {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Email hanya boleh mengandung huruf dan angka",
+                description: local.length < 3
+                    ? "Username email minimal 3 karakter"
+                    : "Email hanya boleh mengandung huruf dan angka",
             })
             return
         }
 
-        const fullEmail = getFullEmail(localPart)
+        setIsLoading(true)
+        try {
+            // Simulasi proses yang memakan waktu
+            await new Promise(resolve => setTimeout(resolve, 1000))
 
-        setResult({
-            dotVariations: generateDotVariations(fullEmail),
-            plusVariations: generatePlusVariations(fullEmail),
-            mixVariations: generateMixVariations(fullEmail)
-        })
+            const fullEmail = getFullEmail(localPart)
+            let plusVariationsAll: string[] = []
+            let mixVariationsAll: string[] = []
 
-        toast({
-            variant: "success",
-            title: "Berhasil",
-            description: "Email variations berhasil di-generate!",
-        })
+            customSuffixes.forEach(suffix => {
+                plusVariationsAll = [...plusVariationsAll, ...generatePlusVariations(fullEmail, suffix)]
+                mixVariationsAll = [...mixVariationsAll, ...generateMixVariations(fullEmail, suffix)]
+            })
+
+            setResult({
+                dotVariations: generateDotVariations(fullEmail).slice(0, maxVariations),
+                plusVariations: plusVariationsAll.slice(0, maxVariations),
+                mixVariations: mixVariationsAll.slice(0, maxVariations)
+            })
+
+            toast({
+                variant: "success",
+                title: "Berhasil",
+                description: "Email variations berhasil di-generate!",
+            })
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Gagal generate email variations",
+            })
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const handleCopy = async (text: string) => {
@@ -134,63 +213,116 @@ export function GmailGenerator() {
         }
     }
 
+    const handleTabChange = (value: string) => {
+        // Jika ada hasil yang sudah digenerate, tampilkan dialog
+        if (result.dotVariations.length > 0 ||
+            result.plusVariations.length > 0 ||
+            result.mixVariations.length > 0) {
+            setShowResetDialog(true)
+            setPendingTabValue(value)
+            return
+        }
+
+        // Jika tidak ada hasil, langsung pindah tab
+        setActiveTab(value)
+        handleTabChangeConfirmed(value)
+    }
+
+    const handleTabChangeConfirmed = (value: string) => {
+        // Reset semua state
+        setResult({
+            dotVariations: [],
+            plusVariations: [],
+            mixVariations: []
+        })
+
+        // Reset input sesuai tab
+        if (value === 'single') {
+            setBulkEmails([])
+        } else {
+            setLocalPart('')
+        }
+
+        // Reset suffix
+        setCustomSuffixes([])
+
+        setActiveTab(value)
+        setPendingTabValue(null)
+        setShowResetDialog(false)
+    }
+
+    const handleDialogCancel = () => {
+        setPendingTabValue(null)
+        setShowResetDialog(false)
+    }
+
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            // Generate dengan Ctrl + Enter
+            if (e.ctrlKey && e.key === 'Enter') {
+                handleGenerate()
+            }
+            // Toggle view mode dengan Ctrl + V
+            if (e.ctrlKey && e.key === 'v') {
+                setViewMode((prev: 'list' | 'grid') => prev === 'list' ? 'grid' : 'list')
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyPress)
+        return () => window.removeEventListener('keydown', handleKeyPress)
+    }, [])
+
     return (
-        <Card className="w-full max-w-4xl mx-auto border shadow-lg">
-            <CardHeader className="space-y-1 text-center">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center justify-center flex-1 gap-2">
-                        <CardTitle className="text-2xl font-bold text-center">
-                            Gmail Generator Tool
-                        </CardTitle>
-                        <InfoDialog />
+        <>
+            <Card className="w-full max-w-4xl mx-auto border shadow-lg">
+                <GmailHeader />
+                <CardContent>
+                    <div className="space-y-6">
+                        <TabsContainer
+                            activeTab={activeTab}
+                            onTabChange={handleTabChange}
+                            localPart={localPart}
+                            onLocalPartChange={setLocalPart}
+                            onGenerate={handleGenerate}
+                            bulkEmails={bulkEmails}
+                            onBulkEmailsChange={setBulkEmails}
+                            customSuffixes={customSuffixes}
+                            onSuffixesChange={setCustomSuffixes}
+                        />
+
+                        <VariationsManager
+                            isLoading={isLoading}
+                            result={result}
+                            onCopy={handleCopy}
+                            onDownload={handleDownload}
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
+                            sortBy={sortBy}
+                            onSortByChange={setSortBy}
+                        />
                     </div>
-                    <ModeToggle />
-                </div>
-                <CardDescription className="text-base">
-                    Generate variasi email Gmail dengan dot (.) dan plus (+)
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    <EmailInput
-                        localPart={localPart}
-                        onLocalPartChange={setLocalPart}
-                        onGenerate={handleGenerate}
-                    />
+                </CardContent>
+                <CardFooter className="flex justify-center border-t pt-4">
+                    <p className="text-sm text-muted-foreground">
+                        Dibuat dengan ❤️ oleh{" "}
+                        <a
+                            href="https://nanodg.my.id"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium underline underline-offset-4 hover:text-primary"
+                        >
+                            NanoDG
+                        </a>
+                    </p>
+                </CardFooter>
+            </Card>
 
-                    <Tabs defaultValue="dot" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="dot">Dot Variations</TabsTrigger>
-                            <TabsTrigger value="plus">Plus Variations</TabsTrigger>
-                            <TabsTrigger value="mix">Mix Variations</TabsTrigger>
-                        </TabsList>
-
-                        {['dot', 'plus', 'mix'].map((type) => (
-                            <TabsContent key={type} value={type}>
-                                <VariationsResult
-                                    type={type}
-                                    variations={result[`${type}Variations` as keyof EmailVariation]}
-                                    onCopy={handleCopy}
-                                    onDownload={handleDownload}
-                                />
-                            </TabsContent>
-                        ))}
-                    </Tabs>
-                </div>
-            </CardContent>
-            <CardFooter className="flex justify-center border-t pt-4">
-                <p className="text-sm text-muted-foreground">
-                    Dibuat dengan ❤️ oleh{" "}
-                    <a
-                        href="https://nanodg.my.id"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium underline underline-offset-4 hover:text-primary"
-                    >
-                        NanoDG
-                    </a>
-                </p>
-            </CardFooter>
-        </Card>
+            <ResetDialog
+                open={showResetDialog}
+                onOpenChange={setShowResetDialog}
+                onCancel={handleDialogCancel}
+                onConfirm={() => pendingTabValue && handleTabChangeConfirmed(pendingTabValue)}
+            />
+        </>
     )
-} 
+}
