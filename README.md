@@ -39,13 +39,45 @@ Sebuah tool untuk menghasilkan variasi alamat Gmail yang valid menggunakan tekni
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Shadcn/ui](https://ui.shadcn.com/)
 - [Lucide Icons](https://lucide.dev/)
+- [Tauri](https://tauri.studio/)
 
 ## 🚀 Cara Menjalankan Proyek
 
+### Sebagai Aplikasi Web
 1. Clone repository
-2. Install dependencies
-3. Jalankan development server
-4. Buka browser
+2. Install dependencies dengan `npm install`
+3. Jalankan development server dengan `npm run dev`
+4. Buka browser dan akses `http://localhost:3000`
+
+### Sebagai Aplikasi Desktop
+1. **Pastikan Rust dan Tauri CLI terinstall**
+
+   #### Instalasi Rust
+   - **Windows**: 
+     - Unduh dan jalankan [Rustup installer](https://rustup.rs/).
+     - Ikuti petunjuk instalasi di layar.
+   - **macOS**:
+     - Buka Terminal dan jalankan:
+       ```bash
+       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+       ```
+     - Ikuti petunjuk di layar.
+   - **Linux**:
+     - Buka Terminal dan jalankan:
+       ```bash
+       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+       ```
+     - Ikuti petunjuk di layar.
+
+   #### Instalasi Tauri CLI
+   - Setelah Rust terinstall, jalankan:
+     ```bash
+     cargo install tauri-cli
+     ```
+
+2. Clone repository
+3. Install dependencies dengan `npm install`
+4. Jalankan aplikasi desktop dengan `npm run tauri dev`
 
 ## 📝 Cara Penggunaan
 
@@ -81,7 +113,8 @@ Kombinasi dari kedua teknik di atas.
 - `npm run build` - Build project untuk production
 - `npm run lint` - Menjalankan ESLint
 - `npm run preview` - Preview build hasil production
-
+- `npm run tauri dev` - Menjalankan aplikasi desktop dengan Tauri
+- `npm run tauri build` - Build aplikasi desktop untuk distribusi
 
 ## 🤝 Kontribusi
 

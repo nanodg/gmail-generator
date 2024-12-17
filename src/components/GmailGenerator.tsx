@@ -7,6 +7,8 @@ import { GmailHeader } from './GmailHeader'
 import { TabsContainer } from './TabsContainer'
 import { ResetDialog } from './ResetDialog'
 import { VariationsManager } from './VariationsManager'
+import { clipboard, dialog, fs } from '@tauri-apps/api';
+import { isTauri } from '@/lib/utils';
 
 export function GmailGenerator() {
     const [localPart, setLocalPart] = useState('')
@@ -143,74 +145,98 @@ export function GmailGenerator() {
 
     const handleCopy = async (text: string) => {
         try {
-            await navigator.clipboard.writeText(text);
+            if (isTauri) {
+                // Gunakan Tauri API untuk desktop
+                await clipboard.writeText(text);
+            } else {
+                // Gunakan Browser API untuk web
+                await navigator.clipboard.writeText(text);
+            }
+
             toast({
                 variant: "success",
                 title: "Berhasil",
                 description: "Teks berhasil disalin ke clipboard!",
-            })
+            });
         } catch (err) {
+            console.error('Copy error:', err);
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "Gagal menyalin teks",
-            })
+            });
         }
-    }
+    };
 
-    const handleDownload = (type: keyof EmailVariation) => {
+    const handleDownload = async (type: keyof EmailVariation) => {
         try {
-            const variations = result[type]
-
+            const variations = result[type];
             if (!variations || variations.length === 0) {
                 toast({
                     variant: "destructive",
                     title: "Error",
-                    description: "Tidak ada data untuk didownload. Silakan generate terlebih dahulu.",
-                })
-                return
+                    description: "Tidak ada data untuk didownload",
+                });
+                return;
             }
 
-            const header = `Gmail ${type} Variations untuk ${localPart}@gmail.com\n` +
-                `Generated pada: ${new Date().toLocaleString()}\n` +
-                `Total: ${variations.length} variations\n\n`;
+            // Tambahkan header ke konten
+            const header = `Gmail ${type} Variations\nGenerated: ${new Date().toLocaleString()}\nTotal: ${variations.length}\n\n`;
+            const content = header + variations.join('\n');
 
-            const content = header + variations.join('\n')
+            if (isTauri) {
+                // Gunakan Tauri API untuk desktop
+                const filePath = await dialog.save({
+                    filters: [{
+                        name: 'Text',
+                        extensions: ['txt']
+                    }]
+                });
 
-            try {
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-                const url = window.URL.createObjectURL(blob)
-                const link = document.createElement('a')
+                if (filePath) {
+                    await fs.writeFile({
+                        contents: content,
+                        path: filePath
+                    });
 
-                link.href = url
-                link.setAttribute('download', `gmail-${type}-${localPart}.txt`)
-                link.style.display = 'none'
-                document.body.appendChild(link)
-                link.click()
+                    toast({
+                        variant: "success",
+                        title: "Berhasil",
+                        description: "File berhasil disimpan!",
+                    });
+                }
+            } else {
+                // Gunakan browser API untuk web
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
 
+                link.href = url;
+                link.download = `gmail-${type}-variations.txt`;
+                document.body.appendChild(link);
+                link.click();
+
+                // Cleanup
                 setTimeout(() => {
-                    document.body.removeChild(link)
-                    window.URL.revokeObjectURL(url)
-                }, 100)
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
 
                 toast({
                     variant: "success",
                     title: "Berhasil",
-                    description: `File gmail-${type}-${localPart}.txt berhasil didownload!`,
-                })
-            } catch (fileErr) {
-                console.error('File operation error:', fileErr)
-                throw new Error('Gagal membuat file')
+                    description: "File berhasil didownload!",
+                });
             }
         } catch (err) {
-            console.error('Download error:', err)
+            console.error('Download error:', err);
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Gagal mendownload file. Silakan coba lagi.",
-            })
+                description: "Gagal menyimpan file",
+            });
         }
-    }
+    };
 
     const handleTabChange = (value: string) => {
         // Jika ada hasil yang sudah digenerate, tampilkan dialog
