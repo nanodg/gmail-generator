@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { EmailVariation } from '@/types/email'
 import { VariationsControls } from './VariationsControls'
 import { VariationsResultTabs } from './VariationsResultTabs'
@@ -12,6 +11,8 @@ interface VariationsManagerProps {
     onViewModeChange: (mode: 'list' | 'grid') => void;
     sortBy: 'alpha' | 'length';
     onSortByChange: (value: 'alpha' | 'length') => void;
+    maxVariations: number;
+    onMaxVariationsChange: (value: number) => void;
 }
 
 export function VariationsManager({
@@ -22,15 +23,15 @@ export function VariationsManager({
     viewMode,
     onViewModeChange,
     sortBy,
-    onSortByChange
+    onSortByChange,
+    maxVariations,
+    onMaxVariationsChange
 }: VariationsManagerProps) {
-    const [maxVariations, setMaxVariations] = useState(100)
-
     return (
         <div className="space-y-6">
             <VariationsControls
                 maxVariations={maxVariations}
-                onMaxVariationsChange={setMaxVariations}
+                onMaxVariationsChange={onMaxVariationsChange}
                 sortBy={sortBy}
                 onSortByChange={onSortByChange}
                 viewMode={viewMode}

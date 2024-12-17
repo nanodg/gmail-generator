@@ -24,8 +24,7 @@ export function GmailGenerator() {
     const [activeTab, setActiveTab] = useState("single")
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
     const [sortBy, setSortBy] = useState<'alpha' | 'length'>('alpha') // Tambahkan state sortBy
-
-    const maxVariations = 100 // Menambahkan konstanta maxVariations
+    const [maxVariations, setMaxVariations] = useState<number>(100); // Default 100
 
     // Helper functions
     const getFullEmail = (local: string) => {
@@ -299,6 +298,8 @@ export function GmailGenerator() {
                             onViewModeChange={setViewMode}
                             sortBy={sortBy}
                             onSortByChange={setSortBy}
+                            maxVariations={maxVariations}
+                            onMaxVariationsChange={setMaxVariations}
                         />
                     </div>
                 </CardContent>
