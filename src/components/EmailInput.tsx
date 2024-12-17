@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Wand2 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface EmailInputProps {
@@ -37,8 +38,13 @@ export function EmailInput({ localPart, onLocalPartChange, onGenerate, isLoading
                         value={localPart}
                         onChange={(e) => onLocalPartChange(e.target.value.toLowerCase())}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground flex items-center gap-1">
                         @gmail.com
+                        {localPart.trim() && (
+                            <button onClick={() => onLocalPartChange('')}> 
+                                <X className="h-5 w-5 text-muted-foreground" />
+                            </button>
+                        )}
                     </span>
                 </div>
                 <Button

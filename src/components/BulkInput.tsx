@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload } from "lucide-react"
+import { Upload, Trash2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -69,13 +69,20 @@ export function BulkInput({ onEmailsChange }: BulkInputProps) {
                             />
                         </label>
                     </Button>
-                    <span className="text-sm text-muted-foreground">
-                        {emailCount} email{emailCount !== 1 ? 's' : ''} akan digenerate
-                    </span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                            {emailCount} email{emailCount !== 1 ? 's' : ''} akan digenerate
+                        </span>
+                        {bulkText && (
+                            <Button variant="outline" onClick={() => setBulkText('')} className="ml-2 h-8 w-9 shrink-0 opacity-60 hover:opacity-100 hover:bg-primary hover:text-primary-foreground transition-all">
+                                <Trash2 className="h-5 w-5" />
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <Textarea
-                    placeholder="Masukkan multiple email (satu per baris atau dipisahkan koma)"
+                    placeholder="Masukkan multiple email (satu per baris atau dipisahkan koma tanpa @gmail.com)"
                     value={bulkText}
                     onChange={(e) => {
                         setBulkText(e.target.value)
